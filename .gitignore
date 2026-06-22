@@ -1,0 +1,13 @@
+outputs/
+.venv/
+__pycache__/
+*.pyc
+.env
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.tex

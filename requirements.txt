@@ -1,0 +1,4 @@
+# 택1 (PROVIDER에 맞게 설치)
+anthropic>=0.40        # PROVIDER=anthropic (Haiku)
+openai>=1.40           # PROVIDER=openai   (gpt-5.4-mini)
+# PROVIDER=mock 은 표준 라이브러리만으로 동작 (설치 불필요)
