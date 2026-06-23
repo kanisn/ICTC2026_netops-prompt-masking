@@ -1,0 +1,50 @@
+{"sample_id": "B3-001", "condition": "C1", "unmasked_output": "firewall add action=block imsi=001010000000101 src_ip=10.20.3.45 access_node=gNB-7"}
+{"sample_id": "B3-002", "condition": "C1", "unmasked_output": "firewall add action=block src_ip=10.20.3.46 dst_ip=203.0.113.40 dst_port=443 imsi=001010000000102"}
+{"sample_id": "B3-003", "condition": "C1", "unmasked_output": "firewall add action=block imsi=001010000000103 src_ip=10.20.4.11"}
+{"sample_id": "B3-004", "condition": "C1", "unmasked_output": "firewall add action=drop access_node=gNB-8 imsi=001010000000104 proto=udp dst_port=53 src_ip=10.20.5.22"}
+{"sample_id": "B3-005", "condition": "C1", "unmasked_output": "firewall add action=block cell=Cell-21B src_ip=10.21.1.15 dst_ip=198.51.100.25"}
+{"sample_id": "B3-006", "condition": "C1", "unmasked_output": "firewall add action=block imsi=001010000000105 supi=imsi-001010000000105 access_node=gNB-12 direction=outbound"}
+{"sample_id": "B3-007", "condition": "C1", "unmasked_output": "firewall add action=block src_ip=10.21.1.16 duration=10m"}
+{"sample_id": "B3-008", "condition": "C1", "unmasked_output": "firewall add action=block imsi=001010000000106 cell=Cell-22D dst_ip=203.0.113.40"}
+{"sample_id": "B3-009", "condition": "C1", "unmasked_output": "firewall add action=block src_ip=10.22.7.80 dst_port=25 proto=tcp ue_id=UE-000107"}
+{"sample_id": "B3-010", "condition": "C1", "unmasked_output": "firewall add action=block access_node=gNB-15 cell=Cell-31A imsi=001010000000108 dst_ip=198.51.100.26"}
+{"sample_id": "B3-011", "condition": "C1", "unmasked_output": "qos set imsi=001010000000109 src_ip=10.22.7.81 rate_limit=50Mbps direction=uplink"}
+{"sample_id": "B3-012", "condition": "C1", "unmasked_output": "qos set imsi=001010000000110 cell=Cell-32B dscp=AF41 rate_limit=20Mbps"}
+{"sample_id": "B3-013", "condition": "C1", "unmasked_output": "qos set imsi=001010000000111 src_ip=10.30.8.9 app=video rate_limit=210Mbps"}
+{"sample_id": "B3-014", "condition": "C1", "unmasked_output": "qos set upf=UPF-A src_ip=10.30.8.10 proto=tcp dst_port=443 rate_limit=100Mbps direction=downlink"}
+{"sample_id": "B3-015", "condition": "C1", "unmasked_output": "qos set slice=1-010001 imsi=001010000000112 priority=high cell=Cell-45C"}
+{"sample_id": "B3-016", "condition": "C1", "unmasked_output": "qos set ue_id=UE-000113 dst_ip=192.0.2.10 proto=udp dst_port=3074 class=low-latency"}
+{"sample_id": "B3-017", "condition": "C1", "unmasked_output": "qos set cell=Cell-46D imsi=001010000000114 app=backup rate_limit=10Mbps"}
+{"sample_id": "B3-018", "condition": "C1", "unmasked_output": "qos set rate_limit=25Mbps src_ip=192.0.2.11 app=streaming slice=1-010002,1-020001"}
+{"sample_id": "B3-019", "condition": "C1", "unmasked_output": "qos set imsi=001010000000115 src_ip=198.51.100.25 app=bulk_data rate_limit=15Mbps preserve_app=VoNR"}
+{"sample_id": "B3-020", "condition": "C1", "unmasked_output": "qos set upf=UPF-B imsi=001010000000116 proto=udp rate_limit=5Mbps"}
+{"sample_id": "B3-021", "condition": "C1", "unmasked_output": "sdn flow switch=s1 match_src=198.51.100.26 match_dst=203.0.113.40 proto=tcp dst_port=8080 action=drop"}
+{"sample_id": "B3-022", "condition": "C1", "unmasked_output": "sdn flow switch=s2 imsi=001010000000117 match_src=203.0.113.41 out_port=3 action=forward"}
+{"sample_id": "B3-023", "condition": "C1", "unmasked_output": "sdn flow switches=leaf-01,leaf-02 match_src=10.40.0.55 match_dst=203.0.113.40 proto=udp dst_port=123 action=deny"}
+{"sample_id": "B3-024", "condition": "C1", "unmasked_output": "sdn flow switch=s3 match_src=10.40.0.56 proto=tcp dst_port=22 action=deny"}
+{"sample_id": "B3-025", "condition": "C1", "unmasked_output": "sdn flow switch=leaf-01 match_src=10.41.2.77 match_dst=10.41.2.78 proto=icmp action=rate_limit duration=30"}
+{"sample_id": "B3-026", "condition": "C1", "unmasked_output": "sdn flow switch=leaf-02 match_src=10.20.3.45 proto=http action=forward"}
+{"sample_id": "B3-027", "condition": "C1", "unmasked_output": "sdn flow switch=spine-01 slice=1-030001 match_src=10.20.3.46 match_dst=10.20.4.11 action=forward out_port=7"}
+{"sample_id": "B3-028", "condition": "C1", "unmasked_output": "sdn flow match_src=10.20.5.22 match_dst=203.0.113.41 dst_port=8443 switch=s1 action=block"}
+{"sample_id": "B3-029", "condition": "C1", "unmasked_output": "sdn flow switch=leaf-01 match_src=10.21.1.15 proto=udp dst_port=53 action=drop"}
+{"sample_id": "B3-030", "condition": "C1", "unmasked_output": "sdn flow switch=s1 imsi=001010000000119 match_src=10.21.1.16 action=quarantine out_port=9"}
+{"sample_id": "B3-031", "condition": "C1", "unmasked_output": "ran handover action=block imsi=001010000000120 source_cell=Cell-17A target_cell=Cell-18C"}
+{"sample_id": "B3-032", "condition": "C1", "unmasked_output": "ran handover action=exclude ue_id=UE-ABC101 access_node=gNB-7 source_cell=Cell-21B target_cell=Cell-22D"}
+{"sample_id": "B3-033", "condition": "C1", "unmasked_output": "ran handover action=block imsi=001010000000101 source_cell=Cell-31A target_cell=Cell-32B"}
+{"sample_id": "B3-034", "condition": "C1", "unmasked_output": "ran handover action=force access_node=gNB-21 supi=imsi-001010000000102 neighbor_cell=Cell-45C priority=low"}
+{"sample_id": "B3-035", "condition": "C1", "unmasked_output": "ran handover imsi=001010000000103 preferred_target=Cell-21B"}
+{"sample_id": "B3-036", "condition": "C1", "unmasked_output": "ran handover action=force imsi=001010000000104 source_cell=Cell-46D target_cell=Cell-45C"}
+{"sample_id": "B3-037", "condition": "C1", "unmasked_output": "ran handover action=block ue_id=UE-000105 access_node=gNB-22 neighbor_cell=Cell-18C"}
+{"sample_id": "B3-038", "condition": "C1", "unmasked_output": "ran handover action=block imsi=001010000000106 source_cell=Cell-21B target_cell=Cell-22D, ran handover action=block imsi=001010000000107 source_cell=Cell-21B target_cell=Cell-22D"}
+{"sample_id": "B3-039", "condition": "C1", "unmasked_output": "slice policy slice=1-010001 imsi=001010000000108 app=enterprise upf=UPF-A"}
+{"sample_id": "B3-040", "condition": "C1", "unmasked_output": "slice policy src_ip=10.22.7.80 from_slice=1-010002 target_class=low-priority"}
+{"sample_id": "B3-041", "condition": "C1", "unmasked_output": "slice policy imsi=001010000000109 app=IoT upf=UPF-C"}
+{"sample_id": "B3-042", "condition": "C1", "unmasked_output": "slice policy imsi=001010000000110 slice=1-020001 profile=emergency priority=critical"}
+{"sample_id": "B3-043", "condition": "C1", "unmasked_output": "slice policy upf=UPF-B src_ip=10.22.7.81 app=gaming edge_node=edge-seoul-01"}
+{"sample_id": "B3-044", "condition": "C1", "unmasked_output": "slice policy slice=1-030001 supi=imsi-001010000000111 priority=low"}
+{"sample_id": "B3-045", "condition": "C1", "unmasked_output": "edge acl node=edge-seoul-01 action=deny src_ip=10.30.8.9 path=/billing"}
+{"sample_id": "B3-046", "condition": "C1", "unmasked_output": "edge acl node=edge-busan-01 action=quarantine src_ip=10.30.8.10 imsi=001010000000112 source_runbook=RB-SEC-17"}
+{"sample_id": "B3-047", "condition": "C1", "unmasked_output": "firewall add action=deny src_ip=192.0.2.10 imsi=001010000000113 source_ticket=TCK-9001"}
+{"sample_id": "B3-048", "condition": "C1", "unmasked_output": "firewall add action=quarantine src_ip=192.0.2.11 imsi=001010000000114 source_tickets=TCK-9002,TCK-9003"}
+{"sample_id": "B3-049", "condition": "C1", "unmasked_output": "sdn flow action=deny switch=leaf-02 match_src=198.51.100.25 match_dst=203.0.113.41 source_doc=CFG-SNAP-22"}
+{"sample_id": "B3-050", "condition": "C1", "unmasked_output": "sdn flow action=block source_cell=Cell-17A target_cell=Cell-18C imsi=001010000000115 source_runbook=RB-RAN-04"}

@@ -1,0 +1,50 @@
+{"sample_id": "B3-001", "condition": "C2", "unmasked_output": "firewall add action=block src_ip=10.20.3.45 imsi=001010000000101 access_node=gNB-7"}
+{"sample_id": "B3-002", "condition": "C2", "unmasked_output": "firewall add action=deny src_ip=10.20.3.46 dst_ip=203.0.113.40 dst_port=443 imsi=001010000000102 direction=outbound"}
+{"sample_id": "B3-003", "condition": "C2", "unmasked_output": "firewall add action=block imsi=001010000000103 src_ip=10.20.4.11 cell=Cell-17A reason=scan_detected"}
+{"sample_id": "B3-004", "condition": "C2", "unmasked_output": "firewall add action=drop src_ip=10.20.5.22 dst_port=53 proto=udp access_node=gNB-8 ue_id=001010000000104"}
+{"sample_id": "B3-005", "condition": "C2", "unmasked_output": "firewall add action=drop src_ip=10.21.1.15 dst_ip=198.51.100.25 cell=Cell-21B"}
+{"sample_id": "B3-006", "condition": "C2", "unmasked_output": "firewall add action=deny imsi=001010000000105 supi=imsi-001010000000105 access_node=gNB-12 direction=outbound reason=suspected_traffic"}
+{"sample_id": "B3-007", "condition": "C2", "unmasked_output": "firewall add action=block src_ip=10.21.1.16 duration=10m reason=scanning_multiple_destinations"}
+{"sample_id": "B3-008", "condition": "C2", "unmasked_output": "firewall add action=deny imsi=001010000000106 dst_ip=203.0.113.40 access_node=Cell-22D"}
+{"sample_id": "B3-009", "condition": "C2", "unmasked_output": "firewall add action=block src_ip=10.22.7.80 proto=tcp dst_port=25 ue_id=UE-000107"}
+{"sample_id": "B3-010", "condition": "C2", "unmasked_output": "firewall add action=deny imsi=001010000000108 dst_ip=198.51.100.26 access_node=gNB-15 cell=Cell-31A reason=C2_destination_block"}
+{"sample_id": "B3-011", "condition": "C2", "unmasked_output": "qos set rate_limit=50Mbps imsi=001010000000109 src_ip=10.22.7.81 direction=uplink"}
+{"sample_id": "B3-012", "condition": "C2", "unmasked_output": "qos set cell=Cell-32B ue_id=001010000000110 app=video dscp=AF41 rate_limit=20Mbps"}
+{"sample_id": "B3-013", "condition": "C2", "unmasked_output": "qos set imsi=001010000000111 src_ip=10.30.8.9 app=video rate_limit=180Mbps"}
+{"sample_id": "B3-014", "condition": "C2", "unmasked_output": "qos set upf=UPF-A dst_ip=10.30.8.10 proto=tcp dst_port=443 direction=downlink rate_limit=100Mbps"}
+{"sample_id": "B3-015", "condition": "C2", "unmasked_output": "qos set imsi=001010000000112 slice=1-010001 app=ar priority=high cell=Cell-45C"}
+{"sample_id": "B3-016", "condition": "C2", "unmasked_output": "qos set ue_id=UE-000113 dst_port=3074 proto=udp class=low-latency src_ip=192.0.2.10"}
+{"sample_id": "B3-017", "condition": "C2", "unmasked_output": "qos set imsi=001010000000114 cell=Cell-46D app=backup rate_limit=10Mbps"}
+{"sample_id": "B3-018", "condition": "C2", "unmasked_output": "qos set rate_limit=25Mbps ue_id=192.0.2.11 app=streaming slice=1-010002 slice=1-020001"}
+{"sample_id": "B3-019", "condition": "C2", "unmasked_output": "qos set imsi=001010000000115 src_ip=198.51.100.25 app=bulk_data rate_limit=15Mbps"}
+{"sample_id": "B3-020", "condition": "C2", "unmasked_output": "qos set imsi=001010000000116 proto=udp direction=uplink rate_limit=5Mbps upf=UPF-B"}
+{"sample_id": "B3-021", "condition": "C2", "unmasked_output": "sdn flow action=drop switch=s1 match_src=198.51.100.26 match_dst=203.0.113.40 proto=tcp dst_port=8080"}
+{"sample_id": "B3-022", "condition": "C2", "unmasked_output": "sdn flow match_src=203.0.113.41 action=forward out_port=3 imsi=001010000000117 switch=s2"}
+{"sample_id": "B3-023", "condition": "C2", "unmasked_output": "sdn flow match_src=10.40.0.55 match_dst=203.0.113.40 proto=udp dst_port=123 switches=leaf-01,leaf-02 action=block"}
+{"sample_id": "B3-024", "condition": "C2", "unmasked_output": "sdn flow action=deny switch=s3 match_dst=10.40.0.56 proto=tcp dst_port=22"}
+{"sample_id": "B3-025", "condition": "C2", "unmasked_output": "sdn flow match_src=10.41.2.77 match_dst=10.41.2.78 proto=icmp action=rate_limit switch=leaf-01 duration=30"}
+{"sample_id": "B3-026", "condition": "C2", "unmasked_output": "sdn flow match_src=10.20.3.45 proto=http action=forward switch=leaf-02"}
+{"sample_id": "B3-027", "condition": "C2", "unmasked_output": "sdn flow match_src=10.20.3.46 match_dst=10.20.4.11 action=forward slice=1-030001 switch=spine-01 out_port=7"}
+{"sample_id": "B3-028", "condition": "C2", "unmasked_output": "sdn flow match_src=10.20.5.22 match_dst=203.0.113.41 dst_port=8443 action=<UNKNOWN> switch=s1"}
+{"sample_id": "B3-029", "condition": "C2", "unmasked_output": "sdn flow match_src=10.21.1.15 proto=udp dst_port=53 action=drop switch=leaf-01 reason=DNS_tunneling_suspected"}
+{"sample_id": "B3-030", "condition": "C2", "unmasked_output": "sdn flow action=quarantine switch=s1 match_src=10.21.1.16 imsi=001010000000119 out_port=9 slice=ctrl-west"}
+{"sample_id": "B3-031", "condition": "C2", "unmasked_output": "ran handover action=block imsi=001010000000120 source_cell=Cell-17A target_cell=Cell-18C neighbor_cell=Cell-18C reason=packet_loss"}
+{"sample_id": "B3-032", "condition": "C2", "unmasked_output": "ran handover action=exclude ue_id=UE-ABC101 source_cell=Cell-21B target_cell=Cell-22D neighbor_cell=Cell-22D access_node=gNB-7"}
+{"sample_id": "B3-033", "condition": "C2", "unmasked_output": "ran handover action=block imsi=001010000000101 source_cell=Cell-31A target_cell=Cell-32B imsi=001010000000101 source_cell=Cell-31A target_cell=Cell-32B imsi=001010000000101 source_cell=Cell-31A target_cell=Cell-32B"}
+{"sample_id": "B3-034", "condition": "C2", "unmasked_output": "ran handover action=exclude supi=imsi-001010000000102 source_cell=gNB-21 neighbor_cell=Cell-45C priority=low"}
+{"sample_id": "B3-035", "condition": "C2", "unmasked_output": "ran handover action=force imsi=001010000000103 preferred_target=Cell-21B"}
+{"sample_id": "B3-036", "condition": "C2", "unmasked_output": "ran handover action=force ue_id=001010000000104 source_cell=Cell-46D target_cell=Cell-45C reason=sinr"}
+{"sample_id": "B3-037", "condition": "C2", "unmasked_output": "ran handover action=block ue_id=UE-000105 source_cell=gNB-22 neighbor_cell=Cell-18C reason=latency"}
+{"sample_id": "B3-038", "condition": "C2", "unmasked_output": "ran handover action=force imsi=001010000000106 source_cell=Cell-21B target_cell=Cell-22D\nran handover action=force imsi=001010000000107 source_cell=Cell-21B target_cell=Cell-22D"}
+{"sample_id": "B3-039", "condition": "C2", "unmasked_output": "slice policy app=enterprise src_ip=<UNKNOWN> slice=1-010001 imsi=001010000000108 upf=UPF-A"}
+{"sample_id": "B3-040", "condition": "C2", "unmasked_output": "slice policy src_ip=10.22.7.80 from_slice=1-010002 priority=low-priority"}
+{"sample_id": "B3-041", "condition": "C2", "unmasked_output": "slice policy app=IoT imsi=001010000000109 upf=UPF-C"}
+{"sample_id": "B3-042", "condition": "C2", "unmasked_output": "slice policy slice=1-020001 imsi=001010000000110 profile=emergency priority=critical"}
+{"sample_id": "B3-043", "condition": "C2", "unmasked_output": "slice policy app=gaming slice=UPF-B src_ip=10.22.7.81 edge_node=edge-seoul-01"}
+{"sample_id": "B3-044", "condition": "C2", "unmasked_output": "slice policy slice=1-030001 supi=imsi-001010000000111 priority=deprioritize"}
+{"sample_id": "B3-045", "condition": "C2", "unmasked_output": "edge acl node=edge-seoul-01 action=deny src_ip=10.30.8.9 path=/billing"}
+{"sample_id": "B3-046", "condition": "C2", "unmasked_output": "edge acl node=edge-busan-01 action=quarantine src_ip=10.30.8.10 imsi=001010000000112 source_runbook=RB-SEC-17"}
+{"sample_id": "B3-047", "condition": "C2", "unmasked_output": "firewall add action=deny src_ip=192.0.2.10 imsi=001010000000113 source_ticket=TCK-9001"}
+{"sample_id": "B3-048", "condition": "C2", "unmasked_output": "firewall add action=quarantine src_ip=192.0.2.11 imsi=001010000000114 source_tickets=TCK-9002,TCK-9003"}
+{"sample_id": "B3-049", "condition": "C2", "unmasked_output": "sdn flow action=drop switch=leaf-02 match_src=198.51.100.25 match_dst=203.0.113.41 source_doc=CFG-SNAP-22"}
+{"sample_id": "B3-050", "condition": "C2", "unmasked_output": "sdn flow action=block match_src=Cell-17A match_dst=Cell-18C imsi=001010000000115 source_doc=RB-RAN-04"}
