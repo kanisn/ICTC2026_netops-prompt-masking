@@ -1,19 +1,24 @@
 """
-run_experiment.py — 조건(C0/C1/C2/C3) × 데이터셋 실행 (B-2 파이프라인)
+run_experiment.py - run conditions (C0/C1/C2/C3) x dataset (B-2 pipeline)
 
-각 (sample, condition)마다:
-  1) 로컬 마스킹 → masked request
-  2) LLM 호출 → raw output (JSON)
-  3) raw output 저장 (★ leakage는 복원 전 이 값으로 측정 — B-7)
-  4) 로컬 unmask → command validity 평가용 복원본
+For each (sample, condition):
+  1) local masking -> masked request
+  2) LLM call -> raw output (JSON)
+  3) save raw output (* leakage is measured on this pre-restoration value - B-7)
+  4) local unmask -> restored output for command-validity evaluation
 
-산출:
-  outputs/raw/<COND>.jsonl       : 복원 전 raw output
-  outputs/unmasked/<COND>.jsonl  : 복원 후
-  outputs/runs.jsonl             : 통합 레코드(평가 입력)
+Outputs (per model tag):
+  outputs/raw_<tag>/<COND>.jsonl       : pre-restoration raw output
+  outputs/unmasked_<tag>/<COND>.jsonl  : post-restoration output
+  outputs/runs_<tag>.jsonl             : combined records (evaluation input)
 """
 import json
 import os
+import sys
+import warnings
+
+# Silence the harmless "Python 3.9 EOL" FutureWarning from google-auth.
+warnings.filterwarnings("ignore", category=FutureWarning, module="google")
 
 import config
 from masking import mask_text, unmask_text
@@ -27,23 +32,23 @@ def load_dataset(path):
 
 def run():
     print("=" * 52)
-    print(f"  PROVIDER = {config.PROVIDER}")
-    print(f"  MODEL    = {config.MODEL}")
+    print(f"  MODEL  = {config.MODEL}  ({config.PROVIDER})")
+    print(f"  OUTPUT = *_{config.TAG}.*")
     if config.PROVIDER == "mock":
-        print("  ⚠️  MOCK 모드입니다 — 실제 LLM 호출이 아닙니다!")
-        print("     실제 실행: 환경변수 EXP_PROVIDER=anthropic 설정 후 재실행")
+        print("  [!] MOCK mode - not a real LLM call!")
     print("=" * 52)
 
     rows = load_dataset(config.DATASET_PATH)
-    os.makedirs(os.path.join(config.OUT_DIR, "raw"), exist_ok=True)
-    os.makedirs(os.path.join(config.OUT_DIR, "unmasked"), exist_ok=True)
+    raw_root, unm_root = config.raw_dir(), config.unmasked_dir()
+    os.makedirs(raw_root, exist_ok=True)
+    os.makedirs(unm_root, exist_ok=True)
 
     all_records = []
     for cond in config.CONDITIONS:
         spec = config.CONDITION_SPEC[cond]
-        raw_f = open(os.path.join(config.OUT_DIR, "raw", f"{cond}.jsonl"),
+        raw_f = open(os.path.join(raw_root, f"{cond}.jsonl"),
                      "w", encoding="utf-8")
-        unm_f = open(os.path.join(config.OUT_DIR, "unmasked", f"{cond}.jsonl"),
+        unm_f = open(os.path.join(unm_root, f"{cond}.jsonl"),
                      "w", encoding="utf-8")
 
         for r in rows:
@@ -65,10 +70,10 @@ def run():
                 "model": config.MODEL,
                 "provider": config.PROVIDER,
                 "masked_request": masked_req,
-                "raw_output": raw_cfg,                 # 복원 전 (leakage 측정)
-                "unmasked_output": unmasked_cfg,       # 복원 후 (validity 측정)
+                "raw_output": raw_cfg,                 # pre-restoration (leakage)
+                "unmasked_output": unmasked_cfg,       # post-restoration (validity)
                 "expected": r["expected_answer_normalized"],
-                "originals": meta["originals"],        # 누출 분모
+                "originals": meta["originals"],        # leakage denominator
                 "rev": meta["rev"],
                 "c3_required": r.get("c3_required", "no"),
                 "latency_sec": round(latency, 4),
@@ -85,11 +90,19 @@ def run():
         unm_f.close()
         print(f"[{cond}] {len(rows)} samples done")
 
-    with open(os.path.join(config.OUT_DIR, "runs.jsonl"), "w", encoding="utf-8") as f:
+    os.makedirs(config.OUT_DIR, exist_ok=True)
+    with open(config.runs_path(), "w", encoding="utf-8") as f:
         for rec in all_records:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    print(f"\nTotal {len(all_records)} records → {config.OUT_DIR}/runs.jsonl")
+    print(f"\nTotal {len(all_records)} records -> {config.runs_path()}")
+    print("Next: python evaluate.py  (select the same model)")
 
 
 if __name__ == "__main__":
+    # Interactive: pick model + enter API key.
+    # Non-interactive: EXP_NONINTERACTIVE=1 + EXP_PROVIDER.
+    if sys.stdin.isatty() and not os.environ.get("EXP_NONINTERACTIVE"):
+        config.interactive_select(require_key=True)
+    else:
+        config.ensure_api_key()
     run()

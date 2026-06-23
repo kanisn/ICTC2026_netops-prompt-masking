@@ -1,27 +1,35 @@
 """
-llm_client.py — provider-agnostic LLM 호출 래퍼 (B-5)
+llm_client.py - provider-agnostic LLM call wrapper (B-5)
 
 call_llm(prompt, sample, mask_meta) -> (parsed_json, latency, in_tok, out_tok)
 
-출력은 항상 동일 JSON 스키마(B-6):
+Output always follows the same JSON schema (B-6):
   {
     "normalized_config": "<cmd key=value ...>",
-    "sensitive_entities_in_output": [...],   # 모델 자기보고(보조용)
+    "sensitive_entities_in_output": [...],   # model self-report (auxiliary)
     "confidence": 0.0~1.0
   }
 
 PROVIDER:
-  - "anthropic": Claude Haiku (tool_use 로 스키마 강제)
+  - "anthropic": Claude Haiku (schema enforced via tool_use)
   - "openai"   : gpt-5.4-mini (response_format=json_schema)
-  - "mock"     : 키 없이 파이프라인 검증. 마스킹된 값을 그대로 통과시키는
-                 "이상적 마스킹 준수 모델"을 시뮬레이션.
+  - "google"   : Gemini (response_schema + JSON mime type)
+  - "mock"     : offline pipeline check; simulates an "ideal masking-compliant
+                 model" by passing the masked values straight through.
 """
 import json
+import logging
+import os
+import re
 import time
 
 import config
 
-# 공통 출력 JSON 스키마
+# Quiet the google-genai "non-text parts (thought_signature)" warnings.
+for _n in ("google_genai", "google_genai.types", "google.genai"):
+    logging.getLogger(_n).setLevel(logging.ERROR)
+
+# Shared output JSON schema
 OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -34,8 +42,8 @@ OUTPUT_SCHEMA = {
     "additionalProperties": False,
 }
 
-# ── 출력 문법 (정답 정규화 어휘에서 추출) ─────────────────────────
-# task_type → (명령 prefix, 허용 key 목록)
+# ── Output grammar (extracted from the gold normalized vocabulary) ─
+# task_type -> (command prefix, allowed key list)
 GRAMMAR = {
     "firewall_config": ("firewall add",
         ["action", "src_ip", "dst_ip", "dst_port", "imsi", "supi",
@@ -48,7 +56,7 @@ GRAMMAR = {
     "sdn_flow_config": ("sdn flow",
         ["match_src", "match_dst", "action", "switch", "switches", "proto",
          "dst_port", "out_port", "imsi", "slice", "duration", "reason"]),
-    "ran_handover_config": ("ran handover",  # 이웃 설정은 'ran neighbor'
+    "ran_handover_config": ("ran handover",  # neighbor setup uses 'ran neighbor'
         ["action", "imsi", "supi", "source_cell", "target_cell",
          "neighbor_cell", "preferred_target", "access_node", "ue_id",
          "priority", "path", "reason"]),
@@ -59,7 +67,7 @@ GRAMMAR = {
         ["node", "action", "src_ip", "path", "imsi", "source_runbook"]),
     "operator_history_config": ("firewall add",
         ["action", "src_ip", "imsi", "source_ticket", "source_tickets"]),
-    "rag_doc_config": ("sdn flow",  # 또는 'ran handover'
+    "rag_doc_config": ("sdn flow",  # or 'ran handover'
         ["action", "switch", "match_src", "match_dst", "source_doc", "imsi",
          "source_cell", "target_cell", "source_runbook"]),
 }
@@ -96,7 +104,7 @@ def build_prompt(masked_request: str, task_type: str = "") -> str:
             "Return the normalized config.")
 
 
-# ── provider 구현 ─────────────────────────────────────────────────
+# ── provider implementations ──────────────────────────────────────
 def _call_anthropic(prompt):
     import anthropic
     client = anthropic.Anthropic()
@@ -133,9 +141,83 @@ def _call_openai(prompt):
     return parsed, dt, u.prompt_tokens, u.completion_tokens
 
 
+def _gemini_text(resp):
+    """Extract JSON text from a Gemini response.
+
+    Reads the text parts directly (skipping 'thought' parts) so we do NOT touch
+    resp.text, which emits a noisy SDK warning when thought parts are present.
+    """
+    try:
+        parts = resp.candidates[0].content.parts or []
+        texts = [p.text for p in parts
+                 if getattr(p, "text", None) and not getattr(p, "thought", False)]
+        if texts:
+            return "".join(texts)
+    except Exception:
+        pass
+    return getattr(resp, "text", "") or ""
+
+
+def _loads_loose(s):
+    """Tolerant JSON parse: strip code fences, else extract the first {...}."""
+    s = (s or "").strip()
+    if s.startswith("```"):
+        s = re.sub(r"^```[a-zA-Z]*\s*", "", s)
+        s = re.sub(r"\s*```$", "", s).strip()
+    try:
+        return json.loads(s)
+    except Exception:
+        m = re.search(r"\{.*\}", s, re.S)
+        if not m:
+            raise
+        return json.loads(m.group(0))
+
+
+def _call_gemini(prompt):
+    from google import genai
+    from google.genai import types
+    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    client = genai.Client(api_key=api_key)
+    # Gemini response schema (OpenAPI subset): no additionalProperties
+    gemini_schema = {
+        "type": "object",
+        "properties": {
+            "normalized_config": {"type": "string"},
+            "sensitive_entities_in_output": {"type": "array", "items": {"type": "string"}},
+            "confidence": {"type": "number"},
+        },
+        "required": ["normalized_config", "sensitive_entities_in_output", "confidence"],
+        "propertyOrdering": ["normalized_config", "sensitive_entities_in_output", "confidence"],
+    }
+    # Disable "thinking" so the token budget is not consumed by thought parts
+    # (which can truncate the JSON); give a comfortable output budget.
+    cfg_kwargs = dict(
+        system_instruction=SYSTEM,
+        temperature=config.TEMPERATURE,
+        max_output_tokens=max(config.MAX_TOKENS, 1024),
+        response_mime_type="application/json",
+        response_schema=gemini_schema,
+    )
+    try:
+        cfg_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+    except Exception:
+        pass
+    t0 = time.time()
+    resp = client.models.generate_content(
+        model=config.MODEL, contents=prompt,
+        config=types.GenerateContentConfig(**cfg_kwargs),
+    )
+    dt = time.time() - t0
+    parsed = _loads_loose(_gemini_text(resp))
+    um = resp.usage_metadata
+    return parsed, dt, um.prompt_token_count, (um.candidates_token_count or 0)
+
+
 def _call_mock(prompt, sample, mask_meta):
-    """이상적 마스킹 준수 모델: 정답 config의 원본값을 마스킹값으로 치환해 반환.
-    → C0는 원본값 누출, C1/C2/C3는 마스킹값만 출력(누출 0)을 재현."""
+    """Ideal masking-compliant model: returns the gold config with original
+    values replaced by their masked values.
+    -> reproduces C0 leaking originals, and C1/C2/C3 emitting only masked
+    values (zero leakage)."""
     t0 = time.time()
     cfg = sample["expected_answer_normalized"]
     for original, masked in sorted(mask_meta["fwd"].items(),
@@ -147,11 +229,33 @@ def _call_mock(prompt, sample, mask_meta):
     return out, time.time() - t0, len(prompt) // 4, len(cfg) // 4
 
 
-def call_llm(prompt, sample=None, mask_meta=None):
+def _dispatch(prompt, sample, mask_meta):
     if config.PROVIDER == "anthropic":
         return _call_anthropic(prompt)
     if config.PROVIDER == "openai":
         return _call_openai(prompt)
+    if config.PROVIDER == "google":
+        return _call_gemini(prompt)
     if config.PROVIDER == "mock":
         return _call_mock(prompt, sample, mask_meta)
     raise ValueError(f"unknown PROVIDER: {config.PROVIDER}")
+
+
+# Substrings that mark a transient (retryable) server/rate-limit error.
+_TRANSIENT = ("503", "unavailable", "429", "resource_exhausted", "overloaded",
+              "500", "internal", "deadline", "timeout", "temporarily")
+
+
+def call_llm(prompt, sample=None, mask_meta=None, retries=6):
+    """Dispatch to the selected provider, retrying transient errors with backoff."""
+    for attempt in range(retries):
+        try:
+            return _dispatch(prompt, sample, mask_meta)
+        except Exception as e:
+            msg = str(e).lower()
+            if any(t in msg for t in _TRANSIENT) and attempt < retries - 1:
+                wait = min(60, 5 * (2 ** attempt))   # 5,10,20,40,60,...
+                print(f"  [retry {attempt + 1}/{retries}] transient error; waiting {wait}s ...")
+                time.sleep(wait)
+                continue
+            raise
